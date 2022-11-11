@@ -1,0 +1,3 @@
+Name Longitude Population
+Greater London -18162.92767 9787426
+Greater Manchester -251761.802 2553379
