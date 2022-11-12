@@ -1,0 +1,54 @@
+library(sf)
+library(tidyverse)
+library(tmap)
+library(dplyr)
+library(janitor)
+#--------------------
+schoolcsv<- read_csv("Report_Card_Assessment_Data_2018-19_School_Year1.csv")
+shape <- st_read("D:/CASA/CASA0005_Geographic_Information_Systems_and_Science/week2/PureRdoit/Washington_Counties_with_Natural_Shoreline___washsh_area/Washington_Counties_with_Natural_Shoreline___washsh_area.shp")
+#--------------------
+df <- data.frame(schoolcsv) #csv定义为df数据框
+df %>% 
+  dplyr::select(County)
+df$County="King"
+df[["County"]]
+summary(df)
+#--------------------
+science<- df %>% 
+  filter(str_detect(`TestSubject`, "Science")) #提取science学科
+#--------------------
+science1<-science %>%  #去重复
+  distinct()
+#--------------------
+science2<-science1 %>%  #提取有用列
+  dplyr::select(contains("County"),contains("Count.of.Students.Expected.to.Test"),contains("CountMetStandard")) 
+#--------------------
+science3 <-na.omit(science2)  #删除NA值所在列
+#--------------------
+science4 <- science3 %>% #重命名列
+  dplyr::rename(allstudents=`Count.of.Students.Expected.to.Test`)%>%
+  dplyr::rename(pass=`CountMetStandard`)%>%
+  clean_names()
+#--------------------
+science5 <- science4  %>%
+  mutate(nupass = as.numeric(pass))
+  
+  science6 <- science5  %>%
+  mutate(nuallstudents = as.numeric(allstudents))
+rm(science5)
+
+science7 <- science6  %>%
+  mutate(per = nupass/nuallstudents)
+
+#--------------------
+shape <- shape%>%
+  merge(.,
+        science7,
+        by.x="COUNTYLABE", 
+        by.y="county")
+#--------------------
+library(tmap)
+tmap_mode("plot")
+shape %>%
+  qtm(.,fill = "county")
+library(dplyr)
